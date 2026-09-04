@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gift</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 12px 12px 80px 12px;
+            overflow-x: hidden;
+        }
+        .container { max-width: 420px; margin: 0 auto; }
+
+        /* ===== ШАПКА ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0 12px 0;
+            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 12px;
+        }
+        .header .title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .header .balance {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 15px;
+            color: #fff;
+        }
+        .header .balance .coin { color: #ffd700; }
+
+        /* ===== ВКЛАДКИ ===== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .tabs .tab {
+            padding: 4px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #888;
+            cursor: pointer;
+            white-space: nowrap;
+            background: #1a1a1a;
+            border: 1px solid transparent;
+            transition: 0.3s;
+        }
+        .tabs .tab.active {
+            color: #fff;
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.08);
+        }
+        .tabs .tab .badge {
+            background: #ffd700;
+            color: #000;
+            border-radius: 10px;
+            padding: 0 6px;
+            font-size: 9px;
+            margin-left: 4px;
+        }
+
+        /* ===== ROCKET ===== */
+        .rocket-card {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .rocket-card .bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.08;
+            background-size: cover;
+            background-position: center;
+        }
+        .rocket-card .content { position: relative; z-index: 2; }
+        .rocket-card .hot { color: #ff6b6b; font-size: 13px; font-weight: 700; letter-spacing: 2px; }
+        .rocket-card .title { font-size: 24px; font-weight: 800; color: #fff; margin: 2px 0 8px 0; }
+        .rocket-card .multipliers { display: flex; gap: 8px; flex-wrap: wrap; }
+        .rocket-card .multipliers span {
+            background: #0a0a0a;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        /* ===== PVP ===== */
+        .pvp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .pvp-item {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .pvp-item .name { font-size: 11px; font-weight: 600; color: #fff; }
+        .pvp-item .percent { font-size: 12px; color: #4ade80; font-weight: 700; }
+
+        /* ===== PLAY HUB ===== */
+        .hub-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .hub-item {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .hub-item:active { transform: scale(0.95); border-color: #ffd700; }
+        .hub-item .icon { font-size: 28px; display: block; }
+        .hub-item .name { font-size: 12px; font-weight: 600; margin-top: 4px; color: #fff; }
+
+        /* ===== FREE ===== */
+        .free-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .free-item {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .free-item:active { transform: scale(0.95); border-color: #4ade80; }
+        .free-item .icon { font-size: 28px; display: block; }
+        .free-item .name { font-size: 11px; font-weight: 600; margin-top: 4px; color: #fff; }
+        .free-item .label { font-size: 10px; color: #4ade80; margin-top: 2px; }
+
+        /* ===== КЕЙСЫ (ВНИЗУ) ===== */
+        .cases-section {
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #1a1a1a;
+        }
+        .cases-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .case-item {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .case-item:active { transform: scale(0.95); border-color: #ffd700; }
+        .case-item .icon { font-size: 28px; display: block; }
+        .case-item .name { font-size: 12px; font-weight: 600; margin-top: 4px; color: #fff; }
+        .case-item .price { font-size: 11px; color: #ffd700; margin-top: 2px; }
+
+        /* ===== НИЖНЕЕ МЕНЮ ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 12px 0;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .bottom-nav .item {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            cursor: pointer;
+            padding: 2px 8px;
+            transition: 0.3s;
+        }
+        .bottom-nav .item .icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .bottom-nav .item.active { color: #ffd700; }
+        .bottom-nav .item:active { transform: scale(0.9); }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+            color: #fff;
+            max-width: 90%;
+        }
+        .toast.show { opacity: 1; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state .icon { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.3; }
+        .empty-state .title { font-size: 16px; color: #888; margin-bottom: 4px; }
+        .empty-state .desc { font-size: 13px; color: #555; }
+
+        .ref-stats {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .ref-stats .stat {
+            flex: 1;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .ref-stats .stat .value { font-size: 18px; font-weight: 700; color: #ffd700; }
+        .ref-stats .stat .label { font-size: 11px; color: #888; }
+
+        .ref-link {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            border: 1px solid #2a2a2a;
+            word-break: break-all;
+            font-size: 13px;
+            color: #aaa;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ref-link .copy { color: #ffd700; cursor: pointer; font-weight: 600; font-size: 13px; }
+
+        .admin-section {
+            background: #1a1a1a;
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+        .admin-section .title { color: #ffd700; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+        .admin-section .input {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+            color: #fff;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .admin-section .input:focus { outline: none; border-color: #ffd700; }
+        .admin-section .btn {
+            background: #ffd700;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .admin-section .btn:active { transform: scale(0.95); }
+        .admin-section .row { display: flex; gap: 8px; margin-top: 6px; }
+        .admin-section .row .btn { flex: 1; background: #2a2a2a; color: #fff; }
+        .admin-section .row .btn:active { background: #3a3a3a; }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+    <!-- ===== ШАПКА ===== -->
+    <div class="header">
+        <span class="title">Gift</span>
+        <div class="balance">
+            <span class="coin">⭐</span>
+            <span id="starsDisplay">0.006</span>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКИ ===== -->
+    <div class="tabs">
+        <span class="tab active" onclick="switchTab('home')">Home</span>
+        <span class="tab" onclick="switchTab('gifts')">Gifts</span>
+        <span class="tab" onclick="switchTab('invite')">Invite</span>
+        <span class="tab" onclick="switchTab('earn')">Earn</span>
+        <span class="tab" id="adminTab" style="display:none;" onclick="switchTab('admin')">👑</span>
+    </div>
+
+    <!-- ===== HOME ===== -->
+    <div id="section-home" class="section active">
+
+        <!-- HOT! ROCKET -->
+        <div class="rocket-card">
+            <div class="bg" style="background-image:url('https://i.ibb.co/ZRtC5ywQ/Screenshot-20260904-163719-2.png');"></div>
+            <div class="content">
+                <div class="hot">🔥 HOT!</div>
+                <div class="title">ROCKET</div>
+                <div class="multipliers">
+                    <span>X1.80</span>
+                    <span>X4.86</span>
+                    <span>X1.74</span>
+                    <span>X1.14</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PVP -->
+        <div style="display:flex;justify-content:space-between;color:#888;font-size:13px;margin-bottom:4px;">
+            <span>⚔️ PVP</span>
+            <span style="color:#4ade80;">Live</span>
+        </div>
+        <div class="pvp-grid">
+            <div class="pvp-item"><div class="name">APE_KING</div><div class="percent">3.3%</div></div>
+            <div class="pvp-item"><div class="name">PUNK42</div><div class="percent">11.4%</div></div>
+            <div class="pvp-item"><div class="name">HOMER</div><div class="percent">7.3%</div></div>
+            <div class="pvp-item"><div class="name">CRI</div><div class="percent">2.0%</div></div>
+        </div>
+
+        <!-- NEW / PLAY HUB -->
+        <div style="color:#ff6b6b;font-size:13px;font-weight:700;margin-bottom:4px;">🔥 NEW</div>
+        <div style="color:#888;font-size:13px;margin-bottom:4px;">🎮 PLAY HUB</div>
+        <div class="hub-grid">
+            <div class="hub-item" onclick="playGame('Upgrade')"><span class="icon">📈</span><div class="name">Upgrade</div></div>
+            <div class="hub-item" onclick="playGame('Craft')"><span class="icon">🔧</span><div class="name">Craft</div></div>
+            <div class="hub-item" onclick="playGame('Plinko')"><span class="icon">🔴</span><div class="name">Plinko</div></div>
+        </div>
+
+        <!-- FREE -->
+        <div style="color:#888;font-size:13px;margin-bottom:4px;">🎁 FREE</div>
+        <div class="free-grid">
+            <div class="free-item" onclick="claimFree()"><span class="icon">🎁</span><div class="name">FREE 24h</div><div class="label">FREE</div></div>
+            <div class="free-item" onclick="claimFree()"><span class="icon">🎂</span><div class="name">B-day</div><div class="label">FREE</div></div>
+            <div class="free-item" onclick="openLimited()"><span class="icon">🔥</span><div class="name">LIMITED</div><div class="label">VIP</div></div>
+        </div>
+
+        <!-- ===== КЕЙСЫ (ВНИЗУ) ===== -->
+        <div class="cases-section">
+            <div style="color:#888;font-size:13px;margin-bottom:4px;">📦 КЕЙСЫ</div>
+            <div class="cases-grid">
+                <div class="case-item" onclick="openCase('обычный')">
+                    <span class="icon">📦</span>
+                    <div class="name">Обычный</div>
+                    <div class="price">10 ⭐</div>
+                </div>
+                <div class="case-item" onclick="openCase('редкий')">
+                    <span class="icon">🎁</span>
+                    <div class="name">Редкий</div>
+                    <div class="price">25 ⭐</div>
+                </div>
+                <div class="case-item" onclick="openCase('легендарный')">
+                    <span class="icon">💎</span>
+                    <div class="name">Легендарный</div>
+                    <div class="price">50 ⭐</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== GIFTS ===== -->
+    <div id="section-gifts" class="section">
+        <div class="empty-state">
+            <span class="icon">🎒</span>
+            <div class="title">Your backpack is empty</div>
+            <div class="desc">Buy items to fill your collection!</div>
+        </div>
+    </div>
+
+    <!-- ===== INVITE ===== -->
+    <div id="section-invite" class="section">
+        <div style="color:#ffd700;font-size:14px;font-weight:600;margin-bottom:4px;">👥 Invite Friends</div>
+        <div style="color:#888;font-size:13px;margin-bottom:12px;">Earn up to 10% from their deposits</div>
+        <div class="ref-stats">
+            <div class="stat"><div class="value" id="refTotal">0</div><div class="label">Total earned</div></div>
+            <div class="stat"><div class="value" id="refToday">0 / 50</div><div class="label">Earned today</div></div>
+        </div>
+        <div class="ref-link">
+            <span id="refLink">https://t.me/EarnFreeStarsEarnFreeStars_bot?start=REF</span>
+            <span class="copy" onclick="copyRef()">Copy</span>
+        </div>
+        <div style="text-align:center;color:#888;font-size:13px;margin-top:12px;">
+            My Invites: <span id="refCount" style="color:#ffd700;">0</span>
+        </div>
+    </div>
+
+    <!-- ===== EARN ===== -->
+    <div id="section-earn" class="section">
+        <div style="color:#ffd700;font-size:14px;font-weight:600;margin-bottom:4px;">💰 Earn</div>
+        <div style="color:#888;font-size:13px;margin-bottom:12px;">Invite friends and earn rewards</div>
+        <div class="ref-stats">
+            <div class="stat"><div class="value" id="earnTotal">0</div><div class="label">Total earned</div></div>
+            <div class="stat"><div class="value" id="earnToday">0 / 50</div><div class="label">Today</div></div>
+        </div>
+        <div style="background:#1a1a1a;border-radius:12px;padding:16px;border:1px solid #2a2a2a;margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;color:#888;font-size:13px;">
+                <span>My Invites</span>
+                <span style="color:#ffd700;" id="earnInvites">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#888;font-size:13px;margin-top:4px;">
+                <span>No invites yet</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== АДМИН ===== -->
+    <div id="section-admin" class="section">
+        <div class="admin-section">
+            <div class="title">👑 Админ-панель</div>
+            <input class="input" id="adminUserId" placeholder="Telegram ID пользователя">
+            <input class="input" id="adminStars" placeholder="Количество звёзд" type="number">
+            <button class="btn" onclick="adminAddStars()">✅ Выдать звёзды</button>
+            <div class="row">
+                <button class="btn" onclick="adminReset()">🔄 Сброс</button>
+                <button class="btn" onclick="adminClearAll()">🗑️ Очистить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== НИЖНЕЕ МЕНЮ ===== -->
+    <div class="bottom-nav">
+        <div class="item active" onclick="switchTab('gifts')"><span class="icon">🎒</span>Backpack</div>
+        <div class="item" onclick="switchTab('invite')"><span class="icon">👥</span>Invite</div>
+        <div class="item" onclick="switchTab('home')"><span class="icon">🏠</span>Home</div>
+        <div class="item" onclick="switchTab('earn')"><span class="icon">🏆</span>Leaderboard</div>
+        <div class="item" onclick="switchTab('earn')"><span class="icon">💰</span>Earn</div>
+    </div>
+
+</div>
+
+<script>
+    const tg = window.Telegram?.WebApp;
+    const ADMIN_ID = 1282372616;
+
+    let data = {
+        stars: 0.006,
+        refs: 0,
+        refCode: 'REF' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+        inventory: []
+    };
+
+    function init() {
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            if (tg.initDataUnsafe?.user && tg.initDataUnsafe.user.id == ADMIN_ID) {
+                document.getElementById('adminTab').style.display = 'block';
+            }
+        }
+        loadData();
+        updateUI();
+        updateRefLink();
+    }
+
+    function loadData() {
+        try {
+            const saved = localStorage.getItem('giftData');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                data = { ...data, ...parsed };
+            }
+        } catch(e) {}
+    }
+
+    function saveData() {
+        localStorage.setItem('giftData', JSON.stringify(data));
+    }
+
+    function updateUI() {
+        document.getElementById('starsDisplay').textContent = data.stars.toFixed(3);
+        document.getElementById('refCount').textContent = data.refs;
+        document.getElementById('refTotal').textContent = data.refs * 5;
+        document.getElementById('refToday').textContent = Math.min(data.refs, 10) + ' / 50';
+        document.getElementById('earnTotal').textContent = data.refs * 5;
+        document.getElementById('earnToday').textContent = Math.min(data.refs, 10) + ' / 50';
+        document.getElementById('earnInvites').textContent = data.refs;
+        saveData();
+    }
+
+    function updateRefLink() {
+        const link = document.getElementById('refLink');
+        link.textContent = `https://t.me/EarnFreeStarsEarnFreeStars_bot?start=${data.refCode}`;
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.bottom-nav .item').forEach(el => el.classList.remove('active'));
+
+        document.getElementById('section-' + tab).classList.add('active');
+        document.querySelector(`.tab[onclick="switchTab('${tab}')"]`)?.classList.add('active');
+
+        const navMap = { home: 2, gifts: 0, invite: 1, earn: 4 };
+        const navIndex = navMap[tab] !== undefined ? navMap[tab] : 2;
+        const navItems = document.querySelectorAll('.bottom-nav .item');
+        if (navItems[navIndex]) navItems[navIndex].classList.add('active');
+
+        updateUI();
+    }
+
+    function playGame(name) {
+        showToast('🎮 ' + name + ' (скоро)');
+        if (tg) {
+            tg.sendData(JSON.stringify({ action: 'game', game: name }));
+        }
+    }
+
+    function claimFree() {
+        const earned = Math.floor(Math.random() * 5) + 1;
+        data.stars += earned;
+        updateUI();
+        showToast('🎁 +' + earned + ' ⭐');
+        if (tg) {
+            tg.sendData(JSON.stringify({ action: 'claim_free', earned: earned }));
+        }
+    }
+
+    function openLimited() {
+        showToast('🔥 LIMITED (скоро)');
+    }
+
+    function openCase(type) {
+        const costs = { 'обычный': 10, 'редкий': 25, 'легендарный': 50 };
+        const cost = costs[type] || 10;
+
+        if (data.stars < cost) {
+            showToast('❌ Нужно ' + cost + ' ⭐');
+            return;
+        }
+
+        data.stars -= cost;
+
+        const prizes = {
+            'обычный': ['⭐ 5', '⭐ 10', '🎴 Обычный NFT'],
+            'редкий': ['⭐ 15', '⭐ 25', '🎴 Редкий NFT'],
+            'легендарный': ['⭐ 30', '⭐ 50', '💎 Легендарный NFT']
+        };
+
+        const prizeList = prizes[type] || prizes['обычный'];
+        const prize = prizeList[Math.floor(Math.random() * prizeList.length)];
+
+        if (prize.includes('⭐')) {
+            const starsWin = parseInt(prize.match(/\d+/)[0] || 0);
+            data.stars += starsWin;
+            showToast('📦 Кейс открыт! +' + starsWin + ' ⭐');
+        } else {
+            data.inventory.push(prize);
+            showToast('📦 Кейс открыт! Выпал: ' + prize);
+        }
+
+        updateUI();
+        if (tg) {
+            tg.sendData(JSON.stringify({
+                action: 'case',
+                type: type,
+                prize: prize,
+                stars: data.stars
+            }));
+        }
+    }
+
+    function closeApp() {
+        if (tg) tg.close();
+    }
+
+    function copyRef() {
+        const link = document.getElementById('refLink').textContent;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(link);
+            showToast('📋 Ссылка скопирована!');
+        } else {
+            showToast('📋 Ссылка: ' + link);
+        }
+    }
+
+    function adminAddStars() {
+        const userId = document.getElementById('adminUserId').value;
+        const amount = parseInt(document.getElementById('adminStars').value);
+        if (!userId || !amount || amount <= 0) {
+            showToast('❌ Введи ID и количество');
+            return;
+        }
+        showToast('✅ Выдано ' + amount + ' ⭐ пользователю ' + userId);
+        document.getElementById('adminUserId').value = '';
+        document.getElementById('adminStars').value = '';
+    }
+
+    function adminReset() {
+        data.inventory = [];
+        saveData();
+        showToast('🔄 Инвентарь сброшен');
+    }
+
+    function adminClearAll() {
+        data.stars = 0;
+        data.inventory = [];
+        data.refs = 0;
+        saveData();
+        updateUI();
+        showToast('🗑️ Всё очищено');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timeout);
+        t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    init();
+</script>
+</body>
+  </html>
